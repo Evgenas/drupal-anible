@@ -1,0 +1,22 @@
+- name: Install postfix
+  apt:
+    name: postfix
+    update_cache: True
+    cache_valid_time: 3600
+  notify: Restart postfix
+
+- name: Create postfix configuration
+  template:
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+  notify: Restart postfix
+
+- name: Create transport configuration
+  copy:
+    src: transport
+    dest: /etc/postfix/transport
+  notify: Restart postfix
+
+- name: Postmap transport
+  command: postmap /etc/postfix/transport
+

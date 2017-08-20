@@ -1,0 +1,19 @@
+- name: Enable security_review
+  command: drush en security_review -y
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user }}'
+
+- name: Enable memcache_storage
+  command: drush en memcache_storage -y
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user }}'
+
+- name: Enable session_proxy
+  command: drush en session_proxy -y
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user }}'
+
+

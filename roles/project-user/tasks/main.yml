@@ -1,0 +1,47 @@
+- name: Add project user
+  user:
+    name: '{{ project_user }}'
+    shell: /bin/bash
+    home: /home/{{ project_user }}
+
+- name: Create project user .ssh directory
+  file:
+    path: /home/{{ project_user }}/.ssh
+    state: directory
+    mode: 0700
+  become_user: '{{ project_user }}'
+
+- name: Create ssh authorized_keys file
+  authorized_key:
+    user: drupal
+    state: present
+    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+- name: Add github token
+  lineinfile:
+    dest: /home/{{ project_user }}/.netrc
+    regexp: machine github\.com
+    line: 'machine github.com login {{ github.username }} password x-oauth-basic'
+    create: True
+    mode: 0600
+  become_user: '{{ project_user }}'
+
+- name: Create composer config directory
+  file:
+    path: /home/{{ project_user }}/.config/composer
+    state: directory
+    mode: 0755
+  become_user: '{{ project_user }}'
+
+- name: Add composer config file
+  template:
+    src: composer-auth.json.j2
+    dest: /home/{{ project_user }}/.config/composer/auth.json
+  become_user: '{{ project_user }}'
+
+- name: Create web directories
+  file:
+    path: '/home/{{ project_user }}/crm'
+    state: directory
+    mode: 0775
+  become_user: '{{ project_user }}'

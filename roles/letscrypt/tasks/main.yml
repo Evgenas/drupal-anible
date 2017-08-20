@@ -1,0 +1,35 @@
+- apt_repository:
+    repo: 'ppa:certbot/certbot'
+  tags: certbot
+
+- name: Install certbot
+  apt:
+    name: python-certbot-nginx
+    update_cache: True
+    cache_valid_time: 3600
+  tags: certbot
+
+- name: Copy ca-certs.pem
+  copy:
+    src: files/ca-certs.pem
+    dest: /etc/ssl/private/ca-certs.pem
+    mode: 0655
+  tags: certbot
+
+- name: Copy Diffie-Hellman file
+  copy:
+    src: files/dhparam.pem
+    dest: /etc/ssl/certs/dhparam.pem
+    mode: 0600
+  tags: certbot
+
+- name: Copy options-ssl-nginx.conf
+  copy:
+    src: files/options-ssl-nginx.conf
+    dest: /etc/letsencrypt/options-ssl-nginx.conf
+    mode: 0655
+  tags: certbot
+
+- name: Generate certificate
+  command: certbot certonly --standalone --agree-tos -n -m {{ certbot_email }} -d {{ domain }}
+  tags: certbot

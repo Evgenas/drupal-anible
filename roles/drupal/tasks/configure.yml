@@ -1,0 +1,28 @@
+- name: Set permissions to public files
+  file:
+    path: '{{ project_dir }}/web/sites/default'
+    owner: '{{ project_user }}'
+    mode: 0770
+
+- name: Create drupal configuration file
+  template:
+    src: templates/settings.php.j2
+    dest: '{{ project_dir }}/web/sites/default/settings.php'
+    mode: 0400
+  become_user: '{{ project_user}}'
+
+- name: Create drupal sensitive data configuration file
+  template:
+    src: templates/local.settings.php.j2
+    dest: /home/{{ project_user }}/crm/web/sites/default/local.settings.php
+    mode: 0400
+  become_user: '{{ project_user}}'
+
+- name: Disable cron emulation
+  command: drush -y vset cron_safe_threshold 0
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user }}'
+
+
+

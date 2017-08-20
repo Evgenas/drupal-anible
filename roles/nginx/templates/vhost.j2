@@ -1,0 +1,249 @@
+server {
+    listen 80 default_server; # managed by Certbot
+
+    listen 443 ssl default_server; # managed by Certbot
+    listen [::]:443 ssl;
+
+    ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+
+
+    # Redirect non-https traffic to https
+     if ($scheme != "https") {
+         return 301 https://$host$request_uri;
+     } # managed by Certbot
+
+    server_name {{ domain }};
+    root /home/{{ project_user }}/crm/web;
+
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+    }
+
+    location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+
+    ###
+    ### Deny crawlers.
+    ###
+    if ($is_crawler) {
+        return 403;
+    }
+
+    ###
+    ### Block semalt botnet.
+    ###
+    if ($is_botnet) {
+        return 403;
+    }
+
+    # Very rarely should these ever be accessed outside of your lan
+    location ~* \.(txt|log)$ {
+        allow 172.31.0.0/16; #default AWS CIDR range
+        deny all;
+    }
+
+    ###
+    ### Deny listed requests for security reasons.
+    ###
+    if ($is_denied) {
+        return 403;
+    }
+
+    ###
+    ### Avoid caching /civicrm* and protect it from bots.
+    ###
+    location ^~ /civicrm {
+      if ($is_bot) {
+        return 403;
+      }
+        access_log off;
+        set $nocache_details "Skip";
+        try_files $uri @drupal;
+   }
+
+   ###
+   ### Deny listed requests for security reasons.
+   ###
+   location ~* (\.(?:git|htaccess|engine|config|inc|ini|info|install|make|module|profile|test|pl|po|sh|.*sql|theme|tpl(\.php)?|xtmpl)(~|\.sw[op]|\.bak|\.orig|\.save)?$|^(\..*|Entries.*|Repository|Root|Tag|Template|composer\.(json|lock))$|^#.*#$|\.php(~|\.sw[op]|\.bak|\.orig\.save))$ {
+        access_log off;
+        return 404;
+    }
+
+    ###
+    ### Deny listed requests for security reasons.
+    ###
+    location ~* /(?:modules|themes|libraries)/.*\.(?:txt|md)$ {
+        access_log off;
+        return 404;
+    }
+
+    ###
+    ### Deny some not supported URI like cgi-bin on the Nginx level.
+    ###
+    location ~* (?:cgi-bin|vti-bin) {
+         access_log off;
+         return 404;
+    }
+
+    ###
+    ### Support for backup_migrate module download/restore/delete actions.
+    ###
+    location ^~ /admin {
+         if ($is_bot) {
+            return 403;
+         }
+         access_log off;
+         set $nocache_details "Skip";
+         try_files $uri @drupal;
+    }
+
+    ###
+    ### Deny direct access to backups.
+    ###
+    location ~* ^/sites/.*/files/backup_migrate/ {
+         access_log off;
+         deny all;
+    }
+
+    location ~ \..*/.*\.php$ {
+        return 403;
+    }
+
+    location ~ ^/sites/.*/private/ {
+        return 403;
+    }
+
+    # Allow "Well-Known URIs" as per RFC 5785
+    location ~* ^/.well-known/ {
+        allow all;
+    }
+
+    # Block access to "hidden" files and directories whose names begin with a
+    # period. This includes directories used by version control systems such
+    # as Subversion or Git to store control files.
+    location ~ (^|/)\. {
+        return 403;
+    }
+
+    location / {
+        try_files $uri /index.php?$query_string; # For Drupal >= 7
+    }
+
+    location @drupal {
+        rewrite ^/(.*)$ /index.php?q=$1;
+    }
+
+    # Don't allow direct access to PHP files in the vendor directory.
+    location ~ /vendor/.*\.php$ {
+        deny all;
+        return 404;
+    }
+
+    # CiviCRM protection
+    location ~* /sites/default/files/civicrm/(?:ConfigAndLog|custom|upload|templates_c) {
+        deny all;
+        access_log off;
+        return 404;
+    }
+
+    # In Drupal 8, we must also match new paths where the '.php' appears in
+    # the middle, such as update.php/selection. The rule we use is strict,
+    # and only allows this pattern with the update.php front controller.
+    # This allows legacy path aliases in the form of
+    # blog/index.php/legacy-path to continue to route to Drupal nodes. If
+    # you do not have any paths like that, then you might prefer to use a
+    # laxer rule, such as:
+    #   location ~ \.php(/|$) {
+    # The laxer rule will continue to work if Drupal uses this new URL
+    # pattern with front controllers other than update.php in a future
+    # release.
+    location ~ '\.php$|^/update.php' {
+        fastcgi_split_path_info ^(.+?\.php)(|/.*)$;
+        # Security note: If you're running a version of PHP older than the
+        # latest 5.3, you should have "cgi.fix_pathinfo = 0;" in php.ini.
+        # See http://serverfault.com/q/627903/94922 for details.
+        include fastcgi_params;
+        # Block httpoxy attacks. See https://httpoxy.org/.
+        fastcgi_param HTTP_PROXY "";
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        fastcgi_param QUERY_STRING $query_string;
+        fastcgi_intercept_errors on;
+        # PHP 5 socket location.
+        #fastcgi_pass unix:/var/run/php5-fpm.sock;
+        # PHP 7 socket location.
+        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+    }
+
+    # Fighting with Styles? This little gem is amazing.
+    # location ~ ^/sites/.*/files/imagecache/ { # For Drupal <= 6
+    location ~ ^/sites/.*/files/styles/ { # For Drupal >= 7
+        try_files $uri @drupal;
+    }
+
+    # Handle private files through Drupal. Private file's path can come
+    # with a language prefix.
+    location ~ ^(/[a-z\-]+)?/system/files/ { # For Drupal >= 7
+        try_files $uri /index.php?$query_string;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+        expires max;
+        log_not_found off;
+    }
+
+   # config to enable HSTS(HTTP Strict Transport Security) https://developer.mozilla.org/en-US/docs/Security/HTTP_Strict_Transport_Security
+   # to avoid ssl stripping https://en.wikipedia.org/wiki/SSL_stripping#SSL_stripping
+   # also https://hstspreload.org/
+   add_header Strict-Transport-Security "max-age=31536000; includeSubdomains; preload";
+
+   # config to don't allow the browser to render the page inside an frame or iframe
+   # and avoid clickjacking http://en.wikipedia.org/wiki/Clickjacking
+   # if you need to allow [i]frames, you can use SAMEORIGIN or even set an uri with ALLOW-FROM uri
+   # https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options
+   add_header X-Frame-Options SAMEORIGIN;
+
+   # when serving user-supplied content, include a X-Content-Type-Options: nosniff header along with the Content-Type: header,
+   # to disable content-type sniffing on some browsers.
+   # https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+   # currently suppoorted in IE > 8 http://blogs.msdn.com/b/ie/archive/2008/09/02/ie8-security-part-vi-beta-2-update.aspx
+   # http://msdn.microsoft.com/en-us/library/ie/gg622941(v=vs.85).aspx
+   # 'soon' on Firefox https://bugzilla.mozilla.org/show_bug.cgi?id=471020
+   add_header X-Content-Type-Options nosniff;
+
+   # This header enables the Cross-site scripting (XSS) filter built into most recent web browsers.
+   # It's usually enabled by default anyway, so the role of this header is to re-enable the filter for
+   # this particular website if it was disabled by the user.
+   # https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+   add_header X-XSS-Protection "1; mode=block";
+
+   add_header Content-Security-Policy "default-src https: data: 'unsafe-inline' 'unsafe-eval'" always;
+   # with Content Security Policy (CSP) enabled(and a browser that supports it(http://caniuse.com/#feat=contentsecuritypolicy),
+   # you can tell the browser that it can only download content from the domains you explicitly allow
+   # http://www.html5rocks.com/en/tutorials/security/content-security-policy/
+   # https://www.owasp.org/index.php/Content_Security_Policy
+   # I need to change our application code so we can increase security by disabling 'unsafe-inline' 'unsafe-eval'
+   # directives for css and js(if you have inline css or js, you will need to keep it too).
+   # more: http://www.html5rocks.com/en/tutorials/security/content-security-policy/#inline-code-considered-harmful
+#   add_header Content-Security-Policy "default-src 'self' https://google.com https://youtube.com https://facebook.com https://fonts.google.com https://fonts.googleapis.com https://ajax.googleapis.com https://www.google-analytics.com https://cdnjs.cloudflare.com https://code.jquery.com https://connect.facebook.net https://s.imgur.com https://imgur.com https://i.imgur.com https://500px.com https://drscdn.500px.org https://www.reddit.com https://www.flickr.com https://c1.staticflickr.com https://maxcdn.bootstrapcdn.com http://code.ionicframework.com https://cdn.fontawesome.com/;
+#    script-src 'self';
+#    style-src 'self';
+#    img-src 'self' data:;
+#    connect-src 'self';
+#    font-src 'self';
+#    object-src 'none';
+#    media-src 'self';
+#    form-action 'self';
+#    frame-ancestors 'self';" always;
+
+   # May be make it wider if we will need to use some specific API i.e PUT | DELETE
+   if ($request_method !~ ^(GET|POST)$ ) {
+         return 444;
+   }
+}

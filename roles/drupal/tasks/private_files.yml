@@ -1,0 +1,14 @@
+- name: create private files directory
+  file:
+    path: '/home/{{ project_user }}/crm/private'
+    state: directory
+    mode: 0770
+    owner: '{{ project_user }}'
+    group: www-data
+
+- name: Enable memcache_storage
+  command: drush vset file_private_path ../private
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user }}'
+

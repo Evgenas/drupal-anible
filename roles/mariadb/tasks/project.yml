@@ -1,0 +1,22 @@
+- name: Clean project database
+  mysql_db:
+    name: '{{ db.drupal_name }}'
+    state: absent
+    login_user: root
+    login_password: '{{ db.root_password }}'
+
+- name: Create project database
+  mysql_db:
+    name: '{{ db.drupal_name }}'
+    login_user: root
+    login_password: '{{ db.root_password }}'
+
+- name: Create project database user
+  mysql_user:
+     name: '{{ db.user }}'
+     password: '{{ db.password }}'
+     host: 'localhost'
+     priv: '{{ db.drupal_name }}.*:ALL'
+     login_user: root
+     login_password: '{{ db.root_password }}'
+

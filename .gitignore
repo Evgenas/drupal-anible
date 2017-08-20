@@ -1,0 +1,9 @@
+.idea
+.vagrant
+*.swp
+
+# Temp files
+ubuntu-xenial-*.log
+*.retry
+/fetch/*
+.vault_pass

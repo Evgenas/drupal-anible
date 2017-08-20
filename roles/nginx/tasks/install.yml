@@ -1,0 +1,40 @@
+- name: add nginx ppa
+  apt_repository:
+    repo: 'ppa:ondrej/nginx'
+
+- name: Install nginx and dependencies
+  apt:
+    name: '{{ item }}'
+    update_cache: True
+    cache_valid_time: 3600
+  with_items:
+    - nginx-extras
+    - python-passlib
+
+- name: Delete default vhost
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
+
+- name: Set ACL to access nginx logs
+  acl:
+    name: /var/log/nginx/
+    entity: '{{ project_user }}'
+    etype: user
+    permissions: rx
+    recursive: True
+    state: present
+
+- name: Set ACL to access nginx access logs
+  acl:
+    name: /var/log/nginx/access.log
+    etype: other
+    permissions: r
+    state: present
+
+- name: Create nginx config file
+  template:
+    src: templates/nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify: restart nginx

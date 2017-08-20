@@ -1,0 +1,19 @@
+- name: Install iptables and iptables-persistent
+  apt:
+    name: '{{ item }}'
+    update_cache: True
+    cache_valid_time: 3600
+  with_items:
+    - iptables
+    - iptables-persistent
+
+- name: Upload iptables rules
+  template:
+    src: iptables-config.j2
+    dest: /etc/iptables-config
+
+- name: Restore iptables config
+  shell: iptables-restore < /etc/iptables-config
+
+- name: Save iptables-persistent configuration
+  shell: netfilter-persistent save

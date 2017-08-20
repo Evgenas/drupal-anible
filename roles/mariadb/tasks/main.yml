@@ -1,0 +1,6 @@
+- include: install.yml
+  tags: db
+
+- include: live.yml
+  when: target == 'live'
+  tags: db

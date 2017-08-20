@@ -1,0 +1,29 @@
+- hosts: live
+  become: True
+  become_method: sudo
+  vars:
+    target: live
+    xdebug_enabled: False
+    domain: drupal-auto.moy-dom.biz
+  gather_facts: False
+  pre_tasks:
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      changed_when: False
+    - setup: # aka gather_facts
+  roles:
+    - setup-server
+    - project-user
+    - cron
+    - letscrypt
+    - nginx
+    - mariadb
+    - redis
+    - geerlingguy.memcached
+    - php70
+    ##- postfix
+    ##- iptables
+    - geerlingguy.drush
+    - drupal
+
+

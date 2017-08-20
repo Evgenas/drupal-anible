@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+
+MAILTO="{{ cron_mailto }}"
+
+*/15 * * * * /usr/local/bin/drush -r {{ project_dir }}/web cron
+*/16 * * * * /usr/local/bin/drush -r {{ project_dir }}/web civicrm-api -u 1 job.execute
+

@@ -1,0 +1,8 @@
+- apt_repository:
+    repo: 'ppa:chris-lea/redis-server'
+
+- name: install redis
+  apt:
+    name: redis-server
+    update_cache: True
+    cache_valid_time: 3600

@@ -1,0 +1,11 @@
+- name: Copy MariaDB configuration for Live
+  copy:
+    src: files/custom.cnf
+    dest: /etc/mysql/conf.d/zzzz_custom.cnf
+  notify: restart nginx
+
+- name: Create project database and user
+  include: project.yml
+
+- name: Create CiviCRM database
+  include: civicrm.yml

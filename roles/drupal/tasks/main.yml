@@ -1,0 +1,17 @@
+- include: install.yml
+  tags: drupal
+
+- include: modules.yml
+  tags: drupal
+
+- include: configure.yml
+  tags: drupal
+
+- include: private_files.yml
+  tags: drupal
+
+- include: civicrm.yml
+  tags: drupal, civicrm
+
+- include: permissions.yml
+  tags: drupal, permissions

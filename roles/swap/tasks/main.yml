@@ -1,0 +1,24 @@
+- name: setup swap partition script
+  template:
+    src: swap.sh.j2
+    dest: /opt/swap.sh
+    mode: 755
+  register: set_swap
+
+- name: run swap partition script
+  command: /opt/swap.sh
+  when: set_swap.changed
+  failed_when: False
+
+- name: make service for swap partition script
+  copy:
+    src: ephemeral-swap.service
+    dest: /etc/systemd/system/ephemeral-swap.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: enable ephemeral swap service
+  service:
+    name: ephemeral-swap
+    enabled: True

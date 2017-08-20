@@ -1,0 +1,17 @@
+- name: Create paf site config file
+  template:
+    src: templates/vhost.j2
+    dest: /etc/nginx/sites-available/{{ web.vhost }}
+  notify: restart nginx
+
+- name: Enable drupal site config file
+  file:
+    src: /etc/nginx/sites-available/{{ web.vhost }}
+    dest: /etc/nginx/sites-enabled/{{ web.vhost }}
+    state: link
+  notify: restart nginx
+
+- name: Install cusom configs
+  include: customize.yml
+
+

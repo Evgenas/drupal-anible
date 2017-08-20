@@ -1,0 +1,116 @@
+- name: add php ppa
+  apt_repository:
+    repo: 'ppa:ondrej/php'
+
+- name: install php
+  apt:
+    name: '{{ item }}'
+    update_cache: True
+    cache_valid_time: 3600
+  with_items:
+    - php7.0
+    - php7.0-cli
+    - php7.0-curl
+    - php7.0-gd
+    - php7.0-fpm
+    - php7.0-json
+    - php7.0-mbstring
+    - php7.0-common
+    - php7.0-mysql
+    - php7.0-soap
+    - php7.0-xml
+    - php-memcache
+    - php-redis
+    - php7.0-zip
+  notify: restart php7.0-fpm
+
+- name: install php-xdebug
+  apt:
+    name: php-xdebug
+    update_cache: True
+    cache_valid_time: 3600
+  when: xdebug_enabled
+  notify: restart php7.0-fpm
+
+- name: install default php-xdebug extension
+  file:
+    src: /etc/php/7.0/mods-available/xdebug.ini
+    dest: '/etc/php/7.0/{{ item }}/conf.d/20-xdebug.ini'
+    state: link
+  with_items:
+    - cli
+    - fpm
+  when: xdebug_enabled
+  notify: restart php7.0-fpm
+
+- name: remove default php-xdebug extension
+  file:
+    path: '/etc/php/7.0/{{ item }}/conf.d/20-xdebug.ini'
+    state: absent
+  with_items:
+    - cli
+    - fpm
+  when: not xdebug_enabled
+  notify: restart php7.0-fpm
+
+- name: create logs directory
+  file:
+    path: /var/log/php7.0
+    state: directory
+    mode: 0755
+    owner: www-data
+    group: www-data
+    recurse: yes
+
+- name: install PHP-FPM configuration
+  copy:
+    src: '{{ target }}.www.conf'
+    dest: /etc/php/7.0/fpm/pool.d/www.conf
+  notify: restart php7.0-fpm
+
+- name: create PHP error.log file
+  file:
+    path: /var/log/php7.0/error.log
+    state: touch
+    owner: www-data
+    group: www-data
+    mode: 0666
+
+- name: create custom PHP configuration
+  template:
+    src: templates/{{ item }}.ini.j2
+    dest: /etc/php/7.0/mods-available/zzzz_{{ item }}.ini
+  with_items:
+    - custom
+    - custom_cli
+  notify: restart php7.0-fpm
+
+- name: copy custom PHP configuration to CLI
+  file:
+    src: /etc/php/7.0/mods-available/zzzz_{{ item }}.ini
+    dest: /etc/php/7.0/cli/conf.d/zzzz_{{ item }}.ini
+    state: link
+  with_items:
+    - custom
+    - custom_cli
+
+- name: copy custom PHP configuration to FPM
+  file:
+    src: /etc/php/7.0/mods-available/zzzz_custom.ini
+    dest: /etc/php/7.0/fpm/conf.d/zzzz_custom.ini
+    state: link
+  notify: restart php7.0-fpm
+
+- name: reopen PHP logs
+  command: /usr/lib/php/php7.0-fpm-reopenlogs
+
+- name: download composer
+  get_url:
+    url: https://getcomposer.org/composer.phar
+    dest: /usr/local/bin/composer
+    mode: 0755
+
+- name: install logrotate PHP-FPM logs
+  copy:
+    src: files/php7.0-logrotate
+    dest: /etc/logrotate.d/php7.0-fpm-logrotate

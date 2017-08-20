@@ -1,0 +1,15 @@
+[mysqld]
+sql-mode = NO_ENGINE_SUBSTITUTION
+max_allowed_packet = 128M
+query_cache_type = 1
+query_cache_limit = 1M
+tmpdir = /tmp
+tmp_table_size = 290M
+max_heap_table_size = 290M
+join_buffer_size = 4M
+innodb_buffer_pool_size = 100M
+innodb_buffer_pool_instances = 1
+table_cache = 600
+log_bin_trust_function_creators = 1
+
+

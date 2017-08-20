@@ -1,0 +1,35 @@
+- name: Add MariaDB repo key
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: '0xF1656F24C74CD1D8'
+
+- name: Add MariaDB repo to sources.list
+  apt_repository:
+    repo: 'deb http://mirrors.n-ix.net/mariadb/repo/10.1/ubuntu xenial main'
+    filename: mariadb
+
+- name: Configure MariaDB installation
+  debconf:
+    name: mariadb-server
+    question: '{{ item }}'
+    vtype: password
+    value: '{{ db.root_password }}'
+  with_items:
+    - mysql-server/root_password
+    - mysql-server/root_password_again
+  changed_when: False
+
+- name: Install MariaDB server
+  apt:
+    name: '{{ item }}'
+    update_cache: True
+    cache_valid_time: 3600
+  with_items:
+    - mariadb-server
+    - python-mysqldb
+    - rsync
+
+- name: Copy MariaDB my.cnf configuration
+  copy:
+    src: files/my.default.cnf
+    dest: /etc/mysql/my.cnf

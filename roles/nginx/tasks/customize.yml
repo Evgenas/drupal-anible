@@ -1,0 +1,20 @@
+- name: Copy mapping file
+  copy:
+    src: files/mapping.conf
+    dest: /etc/nginx/conf.d/mapping.conf
+    mode: 0600
+  notify: restart nginx
+
+- name: Copy buffer file
+  copy:
+    src: files/buffer.conf
+    dest: /etc/nginx/conf.d/buffer.conf
+    mode: 0600
+  notify: restart nginx
+
+- name: Copy timeouts file
+  copy:
+    src: files/timeouts.conf
+    dest: /etc/nginx/conf.d/timeouts.conf
+    mode: 0600
+  notify: restart nginx

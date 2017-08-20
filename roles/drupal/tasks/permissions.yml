@@ -1,0 +1,17 @@
+- name: Set permissions to public files
+  file:
+    path: '{{ project_dir }}/web/sites/default/files'
+    owner: '{{ project_user }}'
+    group: www-data
+    mode: 0770
+
+- name: Create a permissions script
+  copy:
+    src: files/fix-permissions.sh
+    dest: /usr/local/bin/fix-permissions.sh
+    owner: root
+    group: root
+    mode: 0770
+
+- name: Setup permissions
+  command: /usr/local/bin/fix-permissions.sh --drupal_path=/home/{{ project_user }}/crm/web --drupal_user={{ project_user }}

@@ -1,0 +1,9 @@
+[Unit]
+Description=Mount ephemeral swap partition
+
+[Service]
+Type=oneshot
+ExecStart=/opt/swap.sh
+
+[Install]
+WantedBy=multi-user.target

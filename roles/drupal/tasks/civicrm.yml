@@ -1,0 +1,54 @@
+- name: Download civiCRM
+  get_url:
+    url: https://download.civicrm.org/civicrm-4.7.23-drupal.tar.gz
+    dest: /tmp
+    mode: 0755
+  become_user: '{{ project_user}}'
+
+- name: Untar civiCRM
+  unarchive:
+    copy: no
+    src: /tmp/civicrm-4.7.23-drupal.tar.gz
+    dest: /tmp
+  become_user: '{{ project_user}}'
+
+- name: Create project drush folder
+  file:
+    path: '/home/{{ project_user }}/crm/drush'
+    state: directory
+    mode: 0770
+  become_user: '{{ project_user}}'
+
+- name: Copy civiCRM drush
+  copy:
+    remote_src: true
+    src: /tmp/civicrm/drupal/drush/civicrm.drush.inc
+    dest: '{{ project_dir }}/drush/civicrm.drush.inc'
+    owner: '{{ project_user}}'
+    group: '{{ project_user}}'
+    mode: 0770
+
+#- name: Clear drush cache
+#  command: drush cc drush -y
+#  args:
+#    chdir: '{{ project_dir }}/web'
+#  become_user: '{{ project_user }}'
+
+- name: Clean old civicrm.settings.php (for rerun)
+  file:
+    path: '{{ project_dir }}/web/sites/default/civicrm.settings.php'
+    state: absent
+
+- name: Install CiviCRM
+  command: 'drush civicrm-install --dbuser={{ db.user }} --dbpass={{ db.password}} --dbhost=localhost --dbname={{ db.civicrm_name }} --tarfile=/tmp/civicrm-4.7.23-drupal.tar.gz --destination=sites/all/modules -y'
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user }}'
+  tags: civicrm-install
+
+- name: Create drupal configuration file
+  template:
+    src: templates/civicrm.settings.php.j2
+    dest: /home/{{ project_user }}/crm/web/sites/default/civicrm.settings.php
+    mode: 0600
+  become_user: '{{ project_user}}'

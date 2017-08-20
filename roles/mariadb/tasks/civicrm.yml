@@ -1,0 +1,21 @@
+- name: Clean project database
+  mysql_db:
+    name: '{{ db.civicrm_name }}'
+    state: absent
+    login_user: root
+    login_password: '{{ db.root_password }}'
+
+- name: Create CiviCRM database
+  mysql_db:
+    name: '{{ db.civicrm_name }}'
+    login_user: root
+    login_password: '{{ db.root_password }}'
+
+- name: Add civiCRM prev
+  mysql_user:
+     name: '{{ db.user }}'
+     append_privs: true
+     host: 'localhost'
+     priv: '{{ db.civicrm_name }}.*:ALL'
+     login_user: root
+     login_password: '{{ db.root_password }}'

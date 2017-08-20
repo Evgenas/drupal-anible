@@ -1,0 +1,25 @@
+project_user: drupal
+project_dir: /home/{{ project_user }}/crm
+
+web:
+  host: drupal-auto.moy-dom.biz
+  vhost: drupal
+  upload_limit: 10M
+
+db:
+  root_password: "{{ vault_db_root_password }}"
+  user: drupal
+  password: "{{ vault_db_password }}"
+  drupal_name: drupal
+  civicrm_name: civicrm
+
+vault_drupal_admin_password:
+
+cron_mailto: ""
+
+certbot_email: jekccs@gmail.com
+
+# https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth
+github:
+  username: "{{ vault_github_username }}"
+  password: x-oauth-basic

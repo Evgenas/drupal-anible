@@ -1,0 +1,64 @@
+- name: Set hostname
+  hostname:
+    name: '{{ inventory_hostname }}'
+
+- name: Add inventory_hostname to /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '{{ inventory_hostname | regex_escape() }}'
+    line: '127.0.0.1 {{ inventory_hostname }}'
+
+- name: Install basic required packages
+  apt:
+    name: '{{ item }}'
+    update_cache: True
+    cache_valid_time: 3600
+  with_items:
+    - acl
+    - apt-transport-https
+    - curl
+    - htop
+    - mc
+    - rsync
+    - software-properties-common
+    - unzip
+    - vim
+    - root-system-bin
+
+- name: Install dependencies
+  apt:
+    name: '{{ item }}'
+    update_cache: True
+    cache_valid_time: 3600
+  with_items:
+    - git
+
+- name: Disable lang forwarding in sshd
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: 'AcceptEnv LANG LC_'
+    line: '#AcceptEnv LANG LC_*'
+  notify: restart sshd
+
+- name: Set UTC timezone
+  timezone:
+    name: UTC
+
+- name: Create /etc/systemd/system/apt-daily.timer.d dir
+  file:
+    path: /etc/systemd/system/apt-daily.timer.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Set time to run unattended-upgrades
+  template:
+    src: templates/apt_daily_timer_d_override.conf.j2
+    dest: /etc/systemd/system/apt-daily.timer.d/override.conf
+  notify: restart apt-daily.timer
+
+#- name: Add demo public key
+#  authorized_key:
+#    key: files/demo.key.pub
+#    user: ubuntu

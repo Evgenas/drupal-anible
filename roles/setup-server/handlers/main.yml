@@ -1,0 +1,9 @@
+- name: restart sshd
+  service:
+    name: ssh
+    state: restarted
+
+- name: restart apt-daily.timer
+  service:
+    name: apt-daily.timer
+    state: restarted

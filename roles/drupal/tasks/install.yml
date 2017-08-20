@@ -1,0 +1,31 @@
+- name: clone a private repository
+  git:
+    repo: https://github.com/Evgenas/drupal-install-skeleton.git
+    dest: '{{ project_dir }}'
+    accept_hostkey: yes
+  become_user: '{{ project_user}}'
+
+- name: Composer install project
+  composer:
+    command: install
+    working_dir: '{{ project_dir }}'
+  tags: composer
+  become_user: '{{ project_user}}'
+
+- name: Clean old settings.php (for rerun)
+  file:
+    path: '{{ project_dir }}/web/sites/default/settings.php'
+    state: absent
+
+- name: Install drupal via drush
+  command: drush site-install --db-url=mysql://{{ db.user }}:{{ db.password }}@localhost/{{ db.drupal_name }} -y
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user}}'
+
+- name: Change default admin password
+  command: drush upwd --password="{{ vault_drupal_admin_password }}" "admin" -y
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user}}'
+
