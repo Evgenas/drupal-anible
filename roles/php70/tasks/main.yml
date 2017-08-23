@@ -87,12 +87,9 @@
 
 - name: copy custom PHP configuration to CLI
   file:
-    src: /etc/php/7.0/mods-available/zzzz_{{ item }}.ini
-    dest: /etc/php/7.0/cli/conf.d/zzzz_{{ item }}.ini
+    src: /etc/php/7.0/mods-available/zzzz_custom_cli.ini
+    dest: /etc/php/7.0/cli/conf.d/zzzz_custom_cli.ini
     state: link
-  with_items:
-    - custom
-    - custom_cli
 
 - name: copy custom PHP configuration to FPM
   file:

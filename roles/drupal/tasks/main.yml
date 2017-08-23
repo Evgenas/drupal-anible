@@ -13,5 +13,8 @@
 - include: civicrm.yml
   tags: drupal, civicrm
 
+- include: backup_migrate.yml
+  tags: backup
+
 - include: permissions.yml
   tags: drupal, permissions

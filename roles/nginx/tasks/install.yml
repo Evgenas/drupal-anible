@@ -1,6 +1,7 @@
 - name: add nginx ppa
   apt_repository:
     repo: 'ppa:ondrej/nginx'
+    update_cache: yes
 
 - name: Install nginx and dependencies
   apt:
@@ -8,6 +9,7 @@
     update_cache: True
     cache_valid_time: 3600
   with_items:
+    - nginx
     - nginx-extras
     - python-passlib
 

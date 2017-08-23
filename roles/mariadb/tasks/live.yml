@@ -4,8 +4,8 @@
     dest: /etc/mysql/conf.d/zzzz_custom.cnf
   notify: restart nginx
 
-- name: Create project database and user
-  include: project.yml
+- name: Create drupal database and user
+  include: drupal.yml
 
 - name: Create CiviCRM database
   include: civicrm.yml

@@ -1,4 +1,4 @@
-- name: Create paf site config file
+- name: Create virtual host config file
   template:
     src: templates/vhost.j2
     dest: /etc/nginx/sites-available/{{ web.vhost }}

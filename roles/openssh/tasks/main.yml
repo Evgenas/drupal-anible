@@ -1,0 +1,77 @@
+- name: Download openssh-server
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/o/openssh/openssh-server_7.5p1-5_amd64.deb
+    dest: /tmp/openssh-server_7.5p1-5_amd64.deb
+  tags: openssh
+
+- name: Download openssh-client
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/o/openssh/openssh-client_7.5p1-5_amd64.deb
+    dest: /tmp/openssh-client_7.5p1-5_amd64.deb
+  tags: openssh
+
+- name: Download openssh-sftp
+  get_url:
+    url:  http://ftp.us.debian.org/debian/pool/main/o/openssh/openssh-sftp-server_7.5p1-5_amd64.deb
+    dest: /tmp/openssh-sftp-server_7.5p1-5_amd64.deb
+  tags: openssh
+
+- name: Download libgssapi-krb5-2_1.15.1-2_amd64
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/k/krb5/libgssapi-krb5-2_1.15.1-2_amd64.deb
+    dest: /tmp/libgssapi-krb5-2_1.15.1-2_amd64.deb
+  tags: openssh
+
+- name: Download libkrb5-3_1.15.1-2_amd64
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/k/krb5/libkrb5-3_1.15.1-2_amd64.deb
+    dest: /tmp/libkrb5-3_1.15.1-2_amd64.deb
+  tags: openssh
+
+- name: Download libkrb5support
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/k/krb5/libkrb5support0_1.15.1-2_amd64.deb
+    dest: /tmp/libkrb5support0_1.15.1-2_amd64.deb
+  tags: openssh
+
+- name: Download libk5crypto3_1.15.1-2_amd64
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/k/krb5/libk5crypto3_1.15.1-2_amd64.deb
+    dest: /tmp/libk5crypto3_1.15.1-2_amd64.deb
+  tags: openssh
+
+- name: Download krb5-multidev_1.15.1-2_amd64
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/k/krb5/krb5-multidev_1.15.1-2_amd64.deb
+    dest: /tmp/krb5-multidev_1.15.1-2_amd64.deb
+  tags: openssh
+
+- name: Download krb5-multidev_1.15.1-2_amd64
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/k/krb5/libgssrpc4_1.15.1-2_amd64.deb
+    dest: /tmp/libgssrpc4_1.15.1-2_amd64.deb
+  tags: openssh
+
+- name: Download libkadm5srv-mit11_1.15.1-2_amd64
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/k/krb5/libkadm5srv-mit11_1.15.1-2_amd64.deb
+    dest: /tmp/libkadm5srv-mit11_1.15.1-2_amd64.deb
+  tags: openssh
+
+- name: Download libkadm5clnt-mit11_1.15.1-2_amd64
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/k/krb5/libkadm5clnt-mit11_1.15.1-2_amd64.deb
+    dest: /tmp/libkadm5clnt-mit11_1.15.1-2_amd64.deb
+  tags: openssh
+
+- name: Download libkrb5-dev_1.15.1-2_amd64
+  get_url:
+    url: http://ftp.us.debian.org/debian/pool/main/k/krb5/libkrb5-dev_1.15.1-2_amd64.deb
+    dest: /tmp/libkrb5-dev_1.15.1-2_amd64.deb
+  tags: openssh
+
+- name: install openssh pack
+  command: dpkg -i /tmp/libkrb5-dev_1.15.1-2_amd64.deb /tmp/libkadm5clnt-mit11_1.15.1-2_amd64.deb /tmp/libkadm5srv-mit11_1.15.1-2_amd64.deb /tmp/libgssrpc4_1.15.1-2_amd64.deb /tmp/krb5-multidev_1.15.1-2_amd64.deb /tmp/libk5crypto3_1.15.1-2_amd64.deb /tmp/libkrb5-3_1.15.1-2_amd64.deb  /tmp/libkrb5support0_1.15.1-2_amd64.deb /tmp/libgssapi-krb5-2_1.15.1-2_amd64.deb /tmp/openssh-client_7.5p1-5_amd64.deb /tmp/openssh-server_7.5p1-5_amd64.deb /tmp/openssh-sftp-server_7.5p1-5_amd64.deb
+  become: true
+  notify: restart sshd
+  tags: openssh

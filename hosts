@@ -1,5 +1,5 @@
 [live]
-live01 ansible_host=drupal-auto.moy-dom.biz ansible_user=ubuntu
+live01 ansible_host=drupal-auto.moy-dom.biz ansible_user=ubuntu ansible_hostname=live01
 
 
 

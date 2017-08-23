@@ -16,4 +16,10 @@
     chdir: '{{ project_dir }}/web'
   become_user: '{{ project_user }}'
 
+- name: Enable file_integrity
+  command: drush en file_integrity -y
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user }}'
+
 

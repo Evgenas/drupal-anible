@@ -1,0 +1,36 @@
+- name: Enable backup_migrate
+  command: drush en backup_migrate -y
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user }}'
+
+- name: Download amazon-s3-php
+  get_url:
+    url: https://github.com/tpyo/amazon-s3-php-class/archive/v0.5.1.tar.gz
+    dest: /tmp
+    mode: 0755
+  become_user: '{{ project_user}}'
+
+- name: Untar amazon-s3-php
+  unarchive:
+    copy: no
+    src: /tmp/amazon-s3-php-class-0.5.1.tar.gz
+    dest: /tmp
+  become_user: '{{ project_user}}'
+
+- name: Check if lib path exists
+  stat: 'path={{ project_dir }}/web/sites/all/libraries/s3-php5-curl'
+  register: s3_lib_path
+
+- name: Move foo to bar
+  command: 'mv /tmp/amazon-s3-php-class-0.5.1 {{ project_dir }}/web/sites/all/libraries/s3-php5-curl'
+  when: s3_lib_path.stat.exists == false
+
+- name: Configure S3 bucket
+  command: mysql -u {{ db.user }} -p{{ db.password }} -e  "INSERT INTO backup_migrate_destinations (machine_name, name, subtype, location, settings) VALUES ('drupal_backup', 'S3 Drupal backup', 's3', 'https://{{ vault_s3_access_key_id }}:{{ vault_s3_access_key_secret}}@s3.amazonaws.com/drupal-backup-all', 'a:0:{}') " {{ db.drupal_name }}
+
+- name: Demo backup schedule
+  command: mysql -u {{ db.user }} -p{{ db.password }} -e  "INSERT INTO backup_migrate_schedules (machine_name, name, source_id, destination_id, copy_destination_id, profile_id, keep, period, enabled, cron, cron_schedule) VALUES ('demo_backup', 'Demo Backup', 'archive', 'drupal_backup', '', 'default', '-2', '86400', '1', 'builtin', '0 4 * * *')" {{ db.drupal_name }}
+
+- name: Override default profile settings
+  command: mysql -u {{ db.user }} -p{{ db.password }} -e  "INSERT INTO backup_migrate_profiles (machine_name, name, filename, append_timestamp, timestamp_format, filters) VALUES ('default', 'Default Settings', 'Site-Install', '1', 'Y-m-d\\TH-i-s', 'a:11:{s:11:\"compression\";s:4:\"gzip\";s:21:\"notify_success_enable\";i:0;s:20:\"notify_success_email\";s:17:\"admin@example.com\";s:21:\"notify_failure_enable\";i:0;s:20:\"notify_failure_email\";s:17:\"admin@example.com\";s:18:\"utils_site_offline\";i:0;s:26:\"utils_site_offline_message\";s:100:\"Site-Install is currently under maintenance. We should be back shortly. Thank you for your patience.\";s:17:\"utils_description\";s:0:\"\";s:7:\"use_cli\";i:0;s:13:\"ignore_errors\";i:1;s:7:\"sources\";a:3:{s:2:\"db\";a:3:{s:14:\"exclude_tables\";a:0:{}s:13:\"nodata_tables\";a:16:{s:5:\"cache\";s:5:\"cache\";s:11:\"cache_block\";s:11:\"cache_block\";s:15:\"cache_bootstrap\";s:15:\"cache_bootstrap\";s:11:\"cache_field\";s:11:\"cache_field\";s:12:\"cache_filter\";s:12:\"cache_filter\";s:10:\"cache_form\";s:10:\"cache_form\";s:11:\"cache_image\";s:11:\"cache_image\";s:10:\"cache_menu\";s:10:\"cache_menu\";s:10:\"cache_page\";s:10:\"cache_page\";s:10:\"cache_path\";s:10:\"cache_path\";s:12:\"cache_update\";s:12:\"cache_update\";s:14:\"search_dataset\";s:14:\"search_dataset\";s:12:\"search_index\";s:12:\"search_index\";s:12:\"search_total\";s:12:\"search_total\";s:8:\"sessions\";s:8:\"sessions\";s:8:\"watchdog\";s:8:\"watchdog\";}s:17:\"utils_lock_tables\";i:0;}s:5:\"files\";a:1:{s:17:\"exclude_filepaths\";s:45:\"backup_migrate\r\nstyles\r\ncss\r\njs\r\nctools\r\nless\";}s:7:\"archive\";a:1:{s:17:\"exclude_filepaths\";s:159:\"public://backup_migrate\r\npublic://styles\r\npublic://css\r\npublic://js\r\npublic://ctools\r\npublic://less\r\nprivate://backup_migrate\r\nsites/default/settings.php\r\n/tmp\";}}}')" {{ db.drupal_name }}

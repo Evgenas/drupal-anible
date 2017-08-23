@@ -6,3 +6,7 @@
     name: redis-server
     update_cache: True
     cache_valid_time: 3600
+
+- name: install pip redis
+  command: easy_install redis
+  become: true

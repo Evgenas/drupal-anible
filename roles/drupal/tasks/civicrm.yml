@@ -52,3 +52,40 @@
     dest: /home/{{ project_user }}/crm/web/sites/default/civicrm.settings.php
     mode: 0600
   become_user: '{{ project_user}}'
+
+- name: Delete defaul example mail account
+  command: mysql -u {{ db.user }} -p{{ db.password }} -e  "Delete from  civicrm_mail_settings" {{ db.civicrm_name }}
+  tags: civicrm-profile
+
+- name: Setup required mail account
+  command: mysql -u {{ db.user }} -p{{ db.password }} -e  "INSERT INTO civicrm_mail_settings (domain_id , name , is_default , domain , localpart , return_path , protocol , server , username , password , is_ssl , source , activity_status ) VALUES ( 1 , 'Demo Mail Account' ,  1 , '{{ domain }}' ,  NULL ,  NULL , '4' , 'localhost' , 'admin' ,  NULL ,  0 ,  NULL , 'Completed' )" {{ db.civicrm_name }}
+  tags: civicrm-profile
+
+- name: Complete setup 1
+  command: mysql -u {{ db.user }} -p{{ db.password }} -e  "UPDATE  civicrm_option_value  SET option_group_id = 31 , label = '\"System\" <admin@{{domain}}>' , is_default = 1 , weight = 1 , description = NULL , is_active = 1 , domain_id = 1   WHERE (  civicrm_option_value.id = 591 )" {{ db.civicrm_name }}
+  tags: civicrm-profile
+
+- name: Complete setup system email
+  command: mysql -u {{ db.user }} -p{{ db.password }} -e  "UPDATE  civicrm_option_value  SET option_group_id = 31 , label = '\"System\" <admin@{{domain}}>' , is_default = 1 , weight = 1 , description = NULL , is_active = 1 , domain_id = 1   WHERE (  civicrm_option_value.id = 591 )" {{ db.civicrm_name }}
+  tags: civicrm-profile
+
+- name: Complete setup name
+  command: mysql -u {{ db.user }} -p{{ db.password }} -e  "UPDATE  civicrm_domain  SET name = 'Drupal Ansible' , description = NULL , contact_id = 1   WHERE (  civicrm_domain.id = 1 )" {{ db.civicrm_name }}
+  tags: civicrm-profile
+
+- name: Complete setup address
+  command: mysql -u {{ db.user }} -p{{ db.password }} -e  "UPDATE  civicrm_address  SET contact_id = 1 , location_type_id = 1 , is_primary = 1 , is_billing = 0 , street_address = 'Test' , supplemental_address_1 = NULL , supplemental_address_2 = NULL , supplemental_address_3 = NULL , city = 'Test' , state_province_id = NULL , postal_code = NULL , country_id = 1228 , manual_geo_code = 0 , master_id = NULL   WHERE (  civicrm_address.id = 1 )"  {{ db.civicrm_name }}
+  notify: restart memcached
+  tags: civicrm-profile
+
+- name: Initiate first cron run
+  command: 'drush -r {{ project_dir }}/web civicrm-api -u 1 job.execut'
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user}}'
+
+- name: Log out sessions (for rerun)
+  redis:
+    command: flush
+    flush_mode: all
+

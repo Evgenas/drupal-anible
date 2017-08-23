@@ -1,3 +1,9 @@
+- name: cleanup old setup
+  file:
+    path: '{{ project_dir }}'
+    state: absent
+  become_user: root
+
 - name: clone a private repository
   git:
     repo: https://github.com/Evgenas/drupal-install-skeleton.git
@@ -28,4 +34,11 @@
   args:
     chdir: '{{ project_dir }}/web'
   become_user: '{{ project_user}}'
+
+- name: Change default username for uid 1 user
+  command: drush sql-query "update users set name='{{ uid_1_new_name }}' where name='admin'"
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user}}'
+
 

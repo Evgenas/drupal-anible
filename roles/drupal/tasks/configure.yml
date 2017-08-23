@@ -24,5 +24,11 @@
     chdir: '{{ project_dir }}/web'
   become_user: '{{ project_user }}'
 
+- name: Delete php core module
+  file:
+    path: '{{ project_dir }}/web/modules/php'
+    state: absent
+
+
 
 

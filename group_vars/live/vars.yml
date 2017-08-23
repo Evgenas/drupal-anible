@@ -19,6 +19,9 @@ cron_mailto: ""
 
 certbot_email: jekccs@gmail.com
 
+# will replace default 'admin' username created
+uid_1_new_name: compu_admin
+
 # https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth
 github:
   username: "{{ vault_github_username }}"
