@@ -35,3 +35,60 @@
   #if host is not pointed to certificate's domain
   ignore_errors: True
   tags: certbot
+
+- name: Check if certificates were generated
+  stat: 'path=/etc/letsencrypt/live/{{ domain }}/privkey.pem'
+  register: ssl_cert_path
+  tags: certbot
+
+- name: Copy pregenerated certificates
+  block:
+  - name: create archive folder
+    file:
+      path: /etc/letsencrypt/archive
+      mode: 0700
+      state: directory
+
+  - name: create archive folder domain
+    file:
+      path: '/etc/letsencrypt/archive/{{ domain }}'
+      mode: 0700
+      state: directory
+
+  - name: create live folder
+    file:
+      path: /etc/letsencrypt/live
+      mode: 0700
+      state: directory
+
+  - name: create live folder domain
+    file:
+      path: '/etc/letsencrypt/live/{{ domain }}'
+      mode: 0700
+      state: directory
+
+  - name: Copy fullchain.pem
+    copy:
+      src: files/fullchain1.pem
+      dest: '/etc/letsencrypt/archive/{{ domain }}/fullchain1.pem'
+
+  - name: Copy privkey.pem
+    copy:
+      src: files/privkey1.pem
+      dest: '/etc/letsencrypt/archive/{{ domain }}/privkey1.pem'
+
+  - name: Link fullchain.pem
+    file:
+      src: '/etc/letsencrypt/archive/{{ domain }}/fullchain1.pem'
+      dest: '/etc/letsencrypt/live/{{ domain }}/fullchain.pem'
+      state: link
+    become: true
+
+  - name: Copy privkey.pem
+    file:
+      src: '/etc/letsencrypt/archive/{{ domain }}/privkey1.pem'
+      dest: '/etc/letsencrypt/live/{{ domain }}/privkey.pem'
+      state: link
+    become: true
+  when: ssl_cert_path.stat.exists == false
+  tags: certbot
