@@ -32,4 +32,6 @@
 
 - name: Generate certificate
   command: certbot certonly --standalone --agree-tos -n -m {{ certbot_email }} -d {{ domain }}
+  #if host is not pointed to certificate's domain
+  ignore_errors: True
   tags: certbot

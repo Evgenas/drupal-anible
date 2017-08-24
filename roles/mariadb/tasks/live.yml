@@ -2,10 +2,16 @@
   copy:
     src: files/custom.cnf
     dest: /etc/mysql/conf.d/zzzz_custom.cnf
-  notify: restart nginx
 
 - name: Create drupal database and user
   include: drupal.yml
+  tags: drupal
 
 - name: Create CiviCRM database
   include: civicrm.yml
+  tags: drupal, civicrm
+
+- name: restart mysql to pickup config for CiviCRM further installation
+  service:
+      name: mysql
+      state: restarted

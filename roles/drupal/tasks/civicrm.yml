@@ -26,18 +26,19 @@
     dest: '{{ project_dir }}/drush/civicrm.drush.inc'
     owner: '{{ project_user}}'
     group: '{{ project_user}}'
-    mode: 0770
+    mode: 0660
 
-#- name: Clear drush cache
-#  command: drush cc drush -y
-#  args:
-#    chdir: '{{ project_dir }}/web'
-#  become_user: '{{ project_user }}'
+- name: Clear drush cache
+  command: drush cc drush -y
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user }}'
 
 - name: Clean old civicrm.settings.php (for rerun)
   file:
     path: '{{ project_dir }}/web/sites/default/civicrm.settings.php'
     state: absent
+  become: true
 
 - name: Install CiviCRM
   command: 'drush civicrm-install --dbuser={{ db.user }} --dbpass={{ db.password}} --dbhost=localhost --dbname={{ db.civicrm_name }} --tarfile=/tmp/civicrm-4.7.23-drupal.tar.gz --destination=sites/all/modules -y'
@@ -50,7 +51,7 @@
   template:
     src: templates/civicrm.settings.php.j2
     dest: /home/{{ project_user }}/crm/web/sites/default/civicrm.settings.php
-    mode: 0600
+    mode: 0400
   become_user: '{{ project_user}}'
 
 - name: Delete defaul example mail account

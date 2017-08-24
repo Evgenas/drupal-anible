@@ -5,10 +5,6 @@
     target: live
     xdebug_enabled: False
     domain: drupal-auto.moy-dom.biz
-    deb_packages:
-    - /tmp/openssh-sftp-server_7.5p1-5_amd64.deb
-    - /tmp/openssh-client_7.5p1-5_amd64.deb
-    - /tmp/openssh-server_7.5p1-5_amd64.deb
   gather_facts: False
   pre_tasks:
     - name: Install python for Ansible
@@ -18,7 +14,6 @@
   roles:
     - swap
     - setup-server
-    - openssh
     - project-user
     - cron
     - letscrypt
@@ -27,7 +22,8 @@
     - redis
     - geerlingguy.memcached
     - php70
-    ##- postfix
+    - openssh
+    - postfix
     ##- iptables
     - geerlingguy.drush
     - drupal

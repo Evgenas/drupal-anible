@@ -33,13 +33,6 @@
   with_items:
     - git
 
-- name: Disable lang forwarding in sshd
-  lineinfile:
-    dest: /etc/ssh/sshd_config
-    regexp: 'AcceptEnv LANG LC_'
-    line: '#AcceptEnv LANG LC_*'
-  notify: restart sshd
-
 - name: Set UTC timezone
   timezone:
     name: UTC
@@ -58,7 +51,7 @@
     dest: /etc/systemd/system/apt-daily.timer.d/override.conf
   notify: restart apt-daily.timer
 
-#- name: Add demo public key
-#  authorized_key:
-#    key: files/demo.key.pub
-#    user: ubuntu
+- name: Add demo public key
+  authorized_key:
+    key: "{{ lookup('file',  'files/demo.key.pub') }}"
+    user: ubuntu
