@@ -115,6 +115,10 @@ server {
         return 403;
     }
 
+    location ~* /sites/default/files/.*\.php$ {
+        return 403;
+    }
+
     location ~ ^/sites/.*/private/ {
         return 403;
     }
