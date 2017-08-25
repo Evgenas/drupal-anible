@@ -29,6 +29,12 @@
     path: '{{ project_dir }}/web/modules/php'
     state: absent
 
+- name: Disable error display
+  command: drush vset -y error_level 0
+  args:
+    chdir: '{{ project_dir }}/web'
+  become_user: '{{ project_user }}'
+
 
 
 
